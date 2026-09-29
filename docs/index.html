@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drive-for-Dollars — Distressed House Logger</title>
+<meta name="description" content="Spot a distressed house, log it in 30 seconds, build your hit list for skip tracing and mailers.">
+<meta name="theme-color" content="#1F3522">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<style>
+:root{
+  --green:#1F3522; --ivory:#F5F2E8; --gold:#B49A5B; --oxblood:#5C2A2A; --char:#2C2C2C;
+  --paper:#FBF9F2; --line:#E3DCC6; --muted:#7A7566;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{margin:0; background:var(--ivory); color:var(--char);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-size:17px; line-height:1.5}
+h1,h2,h3,.serif{font-family:Georgia,"Times New Roman",serif}
+.wrap{max-width:760px; margin:0 auto; padding:0 16px 120px}
+/* header */
+.hero{background:var(--green); color:var(--ivory); padding:28px 20px 24px; border-bottom:4px solid var(--gold)}
+.hero-inner{max-width:760px; margin:0 auto}
+.eyebrow{color:var(--gold); letter-spacing:3px; font-size:12px; font-weight:700; text-transform:uppercase; margin:0 0 8px}
+.hero h1{margin:0 0 8px; font-size:34px; line-height:1.15; letter-spacing:.5px}
+.hero p.lede{margin:0; font-size:17px; color:#EDE7D3; max-width:34em}
+.steps{display:flex; gap:10px; margin-top:18px}
+.step{flex:1; background:rgba(245,242,232,.07); border:1px solid rgba(180,154,91,.55);
+  border-radius:12px; padding:12px 10px; text-align:center}
+.step .n{display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px;
+  border-radius:50%; background:var(--gold); color:var(--green); font-weight:800; font-size:16px; margin-bottom:6px}
+.step .t{font-size:13.5px; line-height:1.35; color:#EDE7D3}
+/* stats */
+.stats{display:flex; gap:10px; margin:18px 0 6px}
+.stat{flex:1; background:var(--paper); border:1px solid var(--line); border-radius:12px;
+  padding:12px 8px; text-align:center}
+.stat .v{font-family:Georgia,serif; font-size:26px; font-weight:700; color:var(--green)}
+.stat .l{font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px}
+/* big CTA */
+.cta-row{position:sticky; top:0; z-index:5; background:linear-gradient(var(--ivory) 78%, transparent); padding:12px 0 14px}
+.btn{display:block; width:100%; border:0; border-radius:14px; font-size:20px; font-weight:800;
+  padding:18px; cursor:pointer; min-height:60px}
+.btn-gold{background:var(--gold); color:var(--green)}
+.btn-gold:active{transform:scale(.98)}
+.btn-green{background:var(--green); color:var(--ivory)}
+.btn-ox{background:var(--oxblood); color:var(--ivory)}
+.btn-ghost{background:transparent; color:var(--green); border:2px solid var(--green)}
+.btn-row{display:flex; gap:10px}
+.btn-row .btn{flex:1}
+/* filters */
+.filters{display:flex; gap:8px; margin:6px 0 14px; flex-wrap:wrap}
+.filters select, .filters input{flex:1 1 140px; font-size:16px; padding:12px; border-radius:10px;
+  border:1.5px solid var(--line); background:var(--paper); color:var(--char); min-height:48px}
+/* cards */
+.grid{display:grid; grid-template-columns:1fr; gap:12px}
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+.card{background:var(--paper); border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  display:flex; gap:12px; padding:12px; cursor:pointer; text-align:left; width:100%; font:inherit; color:inherit}
+.card:active{background:#F3EEDC}
+.card img{width:96px; height:96px; object-fit:cover; border-radius:10px; background:#DDD6BC; flex-shrink:0}
+.card .noimg{width:96px; height:96px; border-radius:10px; background:var(--green); color:var(--gold);
+  display:flex; align-items:center; justify-content:center; font-family:Georgia,serif; font-size:34px; flex-shrink:0}
+.card .info{flex:1; min-width:0; display:block}
+.card .addr{display:block; font-weight:700; font-size:16.5px; color:var(--green); margin:0 0 2px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.card .meta{display:block; font-size:13px; color:var(--muted); margin:0 0 6px}
+.tags{display:flex; flex-wrap:wrap; gap:5px}
+.tag{font-size:12px; background:#ECE5CF; color:var(--oxblood); border-radius:20px; padding:3px 10px; font-weight:600}
+.tag.rate{background:var(--green); color:var(--ivory)}
+.empty{background:var(--paper); border:2px dashed var(--line); border-radius:14px; padding:36px 20px;
+  text-align:center; color:var(--muted); font-size:17px; grid-column:1/-1}
+.empty .big{font-size:44px; margin-bottom:8px}
+/* sheets (form + detail) */
+.sheet{position:fixed; inset:0; z-index:50; background:var(--ivory); display:none; flex-direction:column}
+.sheet.open{display:flex}
+.sheet-head{background:var(--green); color:var(--ivory); padding:16px 20px; display:flex; align-items:center; gap:12px}
+.sheet-head h2{margin:0; font-size:22px; flex:1}
+.x{background:rgba(245,242,232,.15); color:var(--ivory); border:1px solid rgba(245,242,232,.4);
+  border-radius:10px; width:48px; height:48px; font-size:22px; cursor:pointer}
+.sheet-body{flex:1; overflow-y:auto; padding:18px 16px 24px; max-width:760px; width:100%; margin:0 auto}
+.sheet-foot{padding:12px 16px calc(16px + env(safe-area-inset-bottom)); background:var(--ivory);
+  border-top:1px solid var(--line); max-width:760px; width:100%; margin:0 auto}
+.field{margin-bottom:20px}
+.field label.lbl{display:block; font-weight:800; font-size:16px; margin-bottom:8px; color:var(--green)}
+.field input[type=text], .field input[type=number], .field textarea{width:100%; font-size:17px; padding:14px;
+  border-radius:12px; border:1.5px solid var(--line); background:#fff; color:var(--char); min-height:54px}
+.field textarea{min-height:96px; resize:vertical}
+.hint{font-size:13.5px; color:var(--muted); margin-top:6px}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{border:2px solid var(--line); background:#fff; border-radius:24px; padding:12px 18px;
+  font-size:16px; font-weight:600; cursor:pointer; min-height:52px; color:var(--char)}
+.chip.on{background:var(--green); border-color:var(--green); color:var(--ivory)}
+.rates{display:flex; gap:8px}
+.rate{flex:1; border:2px solid var(--line); background:#fff; border-radius:12px; padding:14px 4px;
+  font-size:15px; font-weight:700; cursor:pointer; min-height:60px; color:var(--char)}
+.rate small{display:block; font-weight:400; font-size:11.5px; color:var(--muted); margin-top:2px}
+.rate.on{background:var(--oxblood); border-color:var(--oxblood); color:var(--ivory)}
+.rate.on small{color:#E8CFCF}
+.photo-row{display:flex; gap:10px; align-items:center}
+.photo-btn{flex:1; border:2px dashed var(--gold); background:#fff; border-radius:12px; padding:16px;
+  font-size:16px; font-weight:700; color:var(--green); cursor:pointer; min-height:60px}
+#photoPrev{width:84px; height:84px; object-fit:cover; border-radius:10px; display:none; border:2px solid var(--gold)}
+.addr-row{display:flex; gap:8px}
+.addr-row input{flex:1}
+.loc-btn{flex-shrink:0; background:var(--green); color:var(--ivory); border:0; border-radius:12px;
+  padding:0 18px; font-size:15px; font-weight:700; cursor:pointer; min-height:54px; white-space:nowrap}
+/* detail */
+.detail-photo{width:100%; max-height:320px; object-fit:cover; border-radius:14px; border:2px solid var(--gold); margin-bottom:14px}
+.kv{display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); font-size:16px}
+.kv .k{color:var(--muted); font-weight:600}
+.kv .v{text-align:right; font-weight:700; color:var(--green)}
+.notes-box{background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:14px; margin-top:12px; white-space:pre-wrap}
+/* footer */
+.foot{margin-top:26px; text-align:center; color:var(--muted); font-size:13px}
+.foot .rule{width:60px; height:2px; background:var(--gold); margin:0 auto 10px}
+.export-row{margin-top:18px}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">The Bull Brew &middot; Investor Tools</p>
+    <h1>Drive-for-Dollars</h1>
+    <p class="lede">Spot a distressed house, log it in 30 seconds from the driver&rsquo;s seat, and build the hit list your mailers and skip tracer will work from.</p>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><div class="t"><strong>Drive.</strong> Cruise the neighborhood, eyes on the houses.</div></div>
+      <div class="step"><span class="n">2</span><div class="t"><strong>Snap &amp; log.</strong> Photo, address, distress signals &mdash; done in half a minute.</div></div>
+      <div class="step"><span class="n">3</span><div class="t"><strong>Export.</strong> Download the CSV and feed it to your mailer.</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats" id="stats"></div>
+
+  <div class="cta-row">
+    <button class="btn btn-gold" id="logBtn" type="button">&#65291; Log a House</button>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="q" placeholder="Search address&hellip;" aria-label="Search address">
+    <select id="fSignal" aria-label="Filter by distress signal"><option value="all">All signals</option></select>
+    <select id="fRating" aria-label="Filter by minimum rating">
+      <option value="all">Any rating</option><option value="4">4+ stars</option>
+      <option value="3">3+ stars</option><option value="2">2+ stars</option>
+    </select>
+  </div>
+
+  <div class="grid" id="list"></div>
+
+  <div class="export-row btn-row">
+    <button class="btn btn-green" id="exportBtn" type="button">&#8681; Export CSV</button>
+  </div>
+
+  <div class="foot">
+    <div class="rule"></div>
+    Everything stays on this device. No account, no cloud, no excuses &mdash; just drive.
+  </div>
+</div>
+
+<!-- LOG SHEET -->
+<div class="sheet" id="logSheet" role="dialog" aria-modal="true" aria-label="Log a house">
+  <div class="sheet-head"><h2>Log a House</h2><button class="x" id="logClose" type="button" aria-label="Close">&times;</button></div>
+  <div class="sheet-body">
+    <div class="field">
+      <label class="lbl" for="addr">Address</label>
+      <div class="addr-row">
+        <input type="text" id="addr" placeholder="123 Main St, Town, ST" autocomplete="off">
+        <button class="loc-btn" id="locBtn" type="button">&#9678; Locate</button>
+      </div>
+      <div class="hint" id="locHint">Tap Locate to fill this in from your GPS (needs signal). Or just type it.</div>
+    </div>
+    <div class="field">
+      <label class="lbl">Photo</label>
+      <div class="photo-row">
+        <img id="photoPrev" alt="House photo preview">
+        <button class="photo-btn" id="photoBtn" type="button">&#128247; Snap / pick a photo</button>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+      <div class="hint">One photo per house. Kept small so it never fills your phone.</div>
+    </div>
+    <div class="field">
+      <label class="lbl">Distress signals <span style="font-weight:400;color:var(--muted)">(tap all you see)</span></label>
+      <div class="chips" id="signalChips"></div>
+    </div>
+    <div class="field">
+      <label class="lbl">How distressed? <span style="font-weight:400;color:var(--muted)">(1 = rough around the edges, 5 = call the skip tracer today)</span></label>
+      <div class="rates" id="rateBtns"></div>
+    </div>
+    <div class="field">
+      <label class="lbl" for="arv">Your ARV guess <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <input type="number" id="arv" inputmode="numeric" placeholder="$ — what it&rsquo;s worth fixed up">
+    </div>
+    <div class="field">
+      <label class="lbl" for="notes">Notes <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <textarea id="notes" placeholder="Blue tarp on the back roof, neighbor says vacant 2 years&hellip;"></textarea>
+    </div>
+  </div>
+  <div class="sheet-foot">
+    <button class="btn btn-gold" id="saveBtn" type="button">Save This House</button>
+  </div>
+</div>
+
+<!-- DETAIL SHEET -->
+<div class="sheet" id="detailSheet" role="dialog" aria-modal="true" aria-label="House details">
+  <div class="sheet-head"><h2>House Details</h2><button class="x" id="detailClose" type="button" aria-label="Close">&times;</button></div>
+  <div class="sheet-body" id="detailBody"></div>
+  <div class="sheet-foot btn-row">
+    <button class="btn btn-ox" id="delBtn" type="button">Delete</button>
+    <button class="btn btn-ghost" id="detailDone" type="button">Done</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* Drive-for-Dollars — all state lives in localStorage. No backend, no tracking. */
+const LS_KEY = "dfd-houses-v1";
+const SIGNALS = ["Overgrown lawn","Boarded windows","Tarp on roof","Piled-up mail",
+  "Peeling paint","Vacant-looking","Code notice posted","Other"];
+const RATE_LABELS = {1:"Tired",2:"Rough",3:"Distressed",4:"Heavy",5:"Wreck"};
+
+let houses = [];
+try { houses = JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(e){ houses = []; }
+let selSignals = new Set(), selRating = 0, tempPhoto = "", detailId = null;
+
+const $ = id => document.getElementById(id);
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(houses)); }catch(e){} }
+function fmtDate(ts){ return new Date(ts).toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}); }
+function money(n){ n = Number(n); return n>0 ? "$"+n.toLocaleString() : "—"; }
+
+/* ---------- stats ---------- */
+function renderStats(){
+  const weekAgo = Date.now() - 7*864e5;
+  const week = houses.filter(h => h.createdAt >= weekAgo).length;
+  const rated = houses.filter(h => h.rating>0);
+  const avg = rated.length ? (rated.reduce((a,h)=>a+h.rating,0)/rated.length).toFixed(1) : "—";
+  const counts = {};
+  houses.forEach(h => (h.signals||[]).forEach(s => counts[s]=(counts[s]||0)+1));
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,2).map(e=>e[0]).join(" · ") || "—";
+  $("stats").innerHTML =
+    stat(week,"logged<br>this week") + stat(avg,"avg<br>distress") + stat(esc(top),"top<br>signals");
+  function stat(v,l){ return '<div class="stat"><div class="v">'+v+'</div><div class="l">'+l+'</div></div>'; }
+}
+
+/* ---------- list ---------- */
+function filtered(){
+  const q = $("q").value.trim().toLowerCase();
+  const fs = $("fSignal").value, fr = $("fRating").value;
+  return houses.filter(h => {
+    if (fs!=="all" && !(h.signals||[]).includes(fs)) return false;
+    if (fr!=="all" && !(h.rating>=Number(fr))) return false;
+    if (q && !(h.address||"").toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=>b.createdAt-a.createdAt);
+}
+function renderList(){
+  const items = filtered();
+  const box = $("list");
+  if (!items.length){
+    box.innerHTML = '<div class="empty"><div class="big">🏚️</div>'+
+      (houses.length ? "Nothing matches those filters." : "No houses yet. Hit the road — your first deal is out there.")+'</div>';
+    return;
+  }
+  box.innerHTML = items.map(h => {
+    const img = h.photo ? '<img src="'+h.photo+'" alt="">' :
+      '<div class="noimg serif">D</div>';
+    const tags = (h.signals||[]).slice(0,3).map(s=>'<span class="tag">'+esc(s)+'</span>').join("") +
+      (h.rating? '<span class="tag rate">'+h.rating+'★ distress</span>' : "");
+    return '<button type="button" class="card" data-id="'+h.id+'">'+img+
+      '<span class="info"><span class="addr">'+esc(h.address||"No address")+'</span>'+
+      '<span class="meta">'+fmtDate(h.createdAt)+
+      (h.arv? ' · ARV '+money(h.arv) : '')+'</span>'+
+      '<span class="tags">'+tags+'</span></span></button>';
+  }).join("");
+  box.querySelectorAll(".card").forEach(c =>
+    c.addEventListener("click", ()=>openDetail(c.getAttribute("data-id"))));
+}
+
+/* ---------- log sheet ---------- */
+function openLog(){
+  selSignals = new Set(); selRating = 0; tempPhoto = "";
+  $("addr").value=""; delete $("addr").dataset.lat; delete $("addr").dataset.lng;
+  $("arv").value=""; $("notes").value="";
+  $("photoPrev").style.display="none"; $("photoPrev").src="";
+  $("locHint").textContent = "Tap Locate to fill this in from your GPS (needs signal). Or just type it.";
+  renderChips(); renderRates();
+  $("logSheet").classList.add("open"); document.body.style.overflow="hidden";
+}
+function closeLog(){ $("logSheet").classList.remove("open"); document.body.style.overflow=""; }
+function renderChips(){
+  $("signalChips").innerHTML = SIGNALS.map(s =>
+    '<button type="button" class="chip'+(selSignals.has(s)?" on":"")+'" data-s="'+esc(s)+'">'+esc(s)+'</button>').join("");
+  $("signalChips").querySelectorAll(".chip").forEach(ch =>
+    ch.addEventListener("click", ()=>{
+      const s = ch.getAttribute("data-s");
+      selSignals.has(s) ? selSignals.delete(s) : selSignals.add(s);
+      ch.classList.toggle("on");
+    }));
+}
+function renderRates(){
+  $("rateBtns").innerHTML = [1,2,3,4,5].map(r =>
+    '<button type="button" class="rate'+(selRating===r?" on":"")+'" data-r="'+r+'">'+r+'★<small>'+RATE_LABELS[r]+'</small></button>').join("");
+  $("rateBtns").querySelectorAll(".rate").forEach(b =>
+    b.addEventListener("click", ()=>{ selRating = Number(b.getAttribute("data-r")); renderRates(); }));
+}
+function compressPhoto(file, cb){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 800, k = Math.min(1, max/Math.max(img.width,img.height));
+      const cv = document.createElement("canvas");
+      cv.width = Math.round(img.width*k); cv.height = Math.round(img.height*k);
+      cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+      cb(cv.toDataURL("image/jpeg",0.72));
+    };
+    img.onerror = () => cb("");
+    img.src = reader.result;
+  };
+  reader.onerror = () => cb("");
+  reader.readAsDataURL(file);
+}
+function useLocation(){
+  const hint = $("locHint");
+  if (!("geolocation" in navigator)){ hint.textContent = "This device has no GPS. Type the address."; return; }
+  hint.textContent = "Getting your position…";
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude.toFixed(6), lng = pos.coords.longitude.toFixed(6);
+    hint.textContent = "Found you — looking up the address…";
+    fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude="+lat+"&longitude="+lng+"&localityLanguage=en")
+      .then(r => r.json())
+      .then(d => {
+        const parts = [d.city, d.principalSubdivision].filter(Boolean);
+        const line = [d.plusCode||"", parts.join(", ")].filter(Boolean).join(" — ");
+        $("addr").value = line || (lat+", "+lng);
+        $("addr").dataset.lat = lat; $("addr").dataset.lng = lng;
+        hint.textContent = "Address filled from GPS. Fix it if it looks off.";
+      })
+      .catch(() => {
+        $("addr").value = lat+", "+lng;
+        hint.textContent = "Offline — saved your coordinates. Add the street address later.";
+      });
+  }, () => { hint.textContent = "Couldn’t get a fix. Type the address by hand."; },
+  {enableHighAccuracy:true, timeout:12000, maximumAge:60000});
+}
+function saveHouse(){
+  const address = $("addr").value.trim();
+  if (!address){ alert("Give the house an address (or coordinates) first."); $("addr").focus(); return; }
+  houses.unshift({
+    id: "h"+Date.now().toString(36)+Math.floor(Math.random()*1e4),
+    address,
+    lat: $("addr").dataset.lat || "", lng: $("addr").dataset.lng || "",
+    photo: tempPhoto,
+    signals: Array.from(selSignals),
+    rating: selRating,
+    arv: $("arv").value ? Number($("arv").value) : 0,
+    notes: $("notes").value.trim(),
+    createdAt: Date.now()
+  });
+  delete $("addr").dataset.lat; delete $("addr").dataset.lng;
+  save(); closeLog(); renderStats(); renderList();
+}
+
+/* ---------- detail sheet ---------- */
+function openDetail(id){
+  const h = houses.find(x=>x.id===id); if(!h) return;
+  detailId = id;
+  const sig = (h.signals||[]).map(s=>'<span class="tag">'+esc(s)+'</span>').join("") || "—";
+  $("detailBody").innerHTML =
+    (h.photo ? '<img class="detail-photo" src="'+h.photo+'" alt="House photo">' : "")+
+    '<h3 class="serif" style="margin:0 0 4px;color:var(--green)">'+esc(h.address)+'</h3>'+
+    '<div class="hint" style="margin:0 0 8px">Logged '+fmtDate(h.createdAt)+'</div>'+
+    '<div class="kv"><span class="k">Distress</span><span class="v">'+(h.rating? h.rating+'★ — '+RATE_LABELS[h.rating] : "—")+'</span></div>'+
+    '<div class="kv"><span class="k">ARV guess</span><span class="v">'+money(h.arv)+'</span></div>'+
+    '<div class="kv"><span class="k">Signals</span></div><div class="tags" style="margin-top:6px">'+sig+'</div>'+
+    (h.notes? '<div class="notes-box">'+esc(h.notes)+'</div>' : "")+
+    ((h.lat||h.lng)? '<div class="hint" style="margin-top:10px">GPS: '+esc(h.lat)+', '+esc(h.lng)+'</div>' : "");
+  $("detailSheet").classList.add("open"); document.body.style.overflow="hidden";
+}
+function closeDetail(){ $("detailSheet").classList.remove("open"); document.body.style.overflow=""; detailId=null; }
+
+/* ---------- export ---------- */
+function exportCSV(){
+  if (!houses.length){ alert("Nothing to export yet — log a house first."); return; }
+  const rows = [["date","address","lat","lng","distress_rating","arv_guess","signals","notes"]];
+  houses.forEach(h => rows.push([
+    new Date(h.createdAt).toISOString().slice(0,10),
+    h.address||"", h.lat||"", h.lng||"", h.rating||"",
+    h.arv||"", (h.signals||[]).join("; "), (h.notes||"").replace(/\s+/g," ")
+  ]));
+  const csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download = "drive-for-dollars-"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ---------- wire up ---------- */
+$("fSignal").innerHTML = '<option value="all">All signals</option>' +
+  SIGNALS.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join("");
+$("logBtn").addEventListener("click", openLog);
+$("logClose").addEventListener("click", closeLog);
+$("saveBtn").addEventListener("click", saveHouse);
+$("locBtn").addEventListener("click", useLocation);
+$("photoBtn").addEventListener("click", ()=>$("photoInput").click());
+$("photoInput").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  compressPhoto(f, url => {
+    if (url){ tempPhoto = url; $("photoPrev").src = url; $("photoPrev").style.display="block"; }
+  });
+  e.target.value = "";
+});
+$("detailClose").addEventListener("click", closeDetail);
+$("detailDone").addEventListener("click", closeDetail);
+$("delBtn").addEventListener("click", ()=>{
+  if (!detailId) return;
+  if (confirm("Delete this house from your hit list?")){
+    houses = houses.filter(h=>h.id!==detailId);
+    save(); closeDetail(); renderStats(); renderList();
+  }
+});
+$("exportBtn").addEventListener("click", exportCSV);
+$("q").addEventListener("input", renderList);
+$("fSignal").addEventListener("change", renderList);
+$("fRating").addEventListener("change", renderList);
+document.addEventListener("keydown", e => {
+  if (e.key==="Escape"){ closeLog(); closeDetail(); }
+});
+
+renderStats(); renderList();
+if ("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
